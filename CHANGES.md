@@ -1,3 +1,11 @@
+v1.2.0-ciencia / 2019-06-09
+===================
+
+  * Remove the "From:" header from original mail (postfix seems to obey it
+    even if wrong)
+  * Add -F parameter to sendmail, to get a nicer sender name instead of
+    "nobody", when removing the From: header
+
 v1.1.1 / 2019-02-22
 ===================
 
