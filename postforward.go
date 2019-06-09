@@ -100,6 +100,10 @@ func headerRewriter(in io.Reader, headers []string) io.Reader {
 				continue
 			}
 		}
+		// Remove From: header in case it exists
+		if bytes.HasPrefix(line, []byte("From: ")) {
+			continue
+		}
 		buffer.Write(line)
 	}
 }
@@ -155,6 +159,13 @@ func main() {
 		die("Parse error: Missing return-path header in message", ExDataErr)
 	}
 
+	fromName := message.Header.Get("From")
+	if fromName == "" {
+		fromName = "unknown (forwarded)"
+	} else {
+		fromName = fromName + " (forwarded)"
+	}
+
 	extraHeaders := []string{
 		fmt.Sprintf("Received: by %s (Postforward); %s",
 			getHostname(), time.Now().Format("Mon, 2 Jan 2006 15:04:05 -0700")),
@@ -167,7 +178,7 @@ func main() {
 	}
 
 	mailreader := io.MultiReader(headerRewriter(&buffer, extraHeaders), os.Stdin)
-	args := append([]string{"-i", "-f", returnPath}, flag.Args()...)
+	args := append([]string{"-i", "-f", returnPath, "-F", fromName}, flag.Args()...)
 	sendmail := exec.Command(*sendmailPath, args...)
 	sendmail.Stdin = mailreader
 	sendmail.Stdout = os.Stdout
